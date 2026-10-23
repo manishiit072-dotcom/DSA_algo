@@ -1,0 +1,49 @@
+#include<bits/stdc++.h>
+using namespace std;
+int n;
+vector<int> segMax,segMin,lazy;
+void propagate(int i,int l,int r)
+{
+    if(lazy[i]!=0)
+    {
+        segMax[i]+=lazy[i];
+        segMin[i]+=lazy[i];
+        if(l!=r)
+        {
+            lazy[2*i+1]+=lazy[i];
+            lazy[2*i+2]+=lazy[i];
+        }
+        lazy[i]=0;
+    }
+}
+void updateRange(int start,int end,int i,int l,int r,int val)
+{
+    propagate(i,l,r);
+    if(start>r || end<l || l>r)
+    {
+        return;
+    }
+    if(start<=l && r<=end)
+    {
+        lazy[i]+=val;
+        propagate(i,l,r);
+        return;
+    }
+
+    int mid=l+(r-l)/2;
+    updateRange(start,end,2*i+1,l,mid,val);
+    updateRange(start,end,2*i+2,mid+1,r,val);
+
+    segMax[i]=max(segMax[2*i+1],segMax[2*i+2]);
+    segMin[i]=min(segMin[2*i+1],segMin[2*i+2]);
+}
+int main()
+{
+    int a;
+    cin>>a;
+    n=a;
+    segMax.resize(4*n);
+    segMin.resize(4*n);
+    lazy.resize(4*n);
+
+}
