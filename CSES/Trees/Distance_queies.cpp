@@ -1,49 +1,83 @@
 #include<bits/stdc++.h>
 using namespace std;
-void dfs(int node,int parent,vector<vector<int>>& tree,vector<int>& dist)
+using ll=long long;
+vector<vector<ll>> adj;
+vector<vector<ll>> ancestorTable;
+vector<ll> depth;
+ll cols;
+void dfs(ll node,ll parent,ll d)
 {
-    for(auto it:tree[node])
+    depth[node]=d;
+    ancestorTable[node][0]=parent;
+
+    for(auto child:adj[node])
     {
-        if(it==parent) continue;
-        dist[it]=1+dist[node];
-        dfs(it,node,tree,dist);
+        if(child==parent) continue;
+        dfs(child,node,d+1);
     }
+}
+ll getLCA(ll u,ll v)
+{
+    if(depth[u]<depth[v]) swap(u,v);
+    ll diff=depth[u]-depth[v];
+    for(ll j=0;j<cols;j++)
+    {
+        if(diff&(1LL<<j))
+        {
+            u=ancestorTable[u][j];
+        }
+    }
+
+    if(u==v) return u;
+
+    for(ll j=cols-1;j>=0;j--)
+    {
+        if(ancestorTable[u][j]==-1 || ancestorTable[u][j]==ancestorTable[v][j])
+        {
+            continue;
+        }
+        u=ancestorTable[u][j];
+        v=ancestorTable[v][j];
+    }
+
+    return ancestorTable[u][0];
 }
 int main()
 {
-    int n,q;
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
+    ll n,q;
     cin>>n>>q;
-    vector<vector<int>> tree(n+1);
-    for(int i=2;i<=n;i++)
+    cols=log2(n)+1;
+    adj.resize(n+1,{});
+    depth.resize(n+1,0);
+    ancestorTable.resize(n+1,vector<ll>(cols,-1));
+    for(ll i=0;i<n-1;i++)
     {
-        int u,v;
+        ll u,v;
         cin>>u>>v;
-        tree[u].push_back(v);
-        tree[v].push_back(u);
+        adj[u].push_back(v);
+        adj[v].push_back(u);
     }
-
-    vector<vector<int>> queries(q);
-    for(int i=0;i<q;i++)
+    dfs(1,-1,0);
+    for(ll j=1;j<cols;j++)
     {
-        int u,v;
-        cin>>u>>v;
-        queries[i]={u,v};
+        for(ll node=1;node<=n;node++)
+        {
+            if(ancestorTable[node][j-1]!=-1)
+            {
+                ancestorTable[node][j]=ancestorTable[ancestorTable[node][j-1]][j-1];
+            }
+        }
     }
 
-    vector<int> res(q);
-    for(int i=0;i<q;i++)
+    for(ll i=0;i<q;i++)
     {
-        int u=queries[i][0];
-        int v=queries[i][1];
-        vector<int> dist(n+1,0);
-        dfs(u,-1,tree,dist);
-        res[i]=dist[v];
+        ll a,b;
+        cin>>a>>b;
+        ll distance=depth[a]+depth[b]-2*depth[getLCA(a,b)];
+        cout<<distance<<"\n";
     }
-
-    for(int i=0;i<q;i++)
-    {
-        cout<<res[i]<<"\n";
-    }
-
     return 0;
 }
