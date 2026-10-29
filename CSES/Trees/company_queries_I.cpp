@@ -1,52 +1,92 @@
-#include<bits/stdc++.h>
+
+#include <bits/stdc++.h>
 using namespace std;
-void dfs(int node,int parent,vector<vector<int>>& tree,vector<int>& dist)
+
+using ll = long long;
+
+vector<vector<ll>> adj;
+vector<vector<ll>> ancestorTable;
+vector<ll> depth;
+ll cols;
+
+void dfs(ll node, ll parent, vector<vector<ll>>& adj)
 {
-    for(auto it:tree[node])
+    ancestorTable[node][0] = parent;
+
+
+    for (ll child : adj[node])
     {
-        if(it==parent) continue;
-        dist[it]=1+dist[node];
-        dfs(it,node,tree,dist);
+        if (child == parent)
+            continue;
+
+        depth[child] = depth[node] + 1;
+        dfs(child, node, adj);
     }
 }
+
 int main()
 {
-    int n,m;
-    cin>>n>>m;
-    vector<vector<int>> tree(n+1);
-    for(int i=2;i<=n;i++)
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    ll n, q;
+    cin >> n >> q;
+
+    cols = log2(n) + 1;
+
+    depth.resize(n + 1, 0);
+    ancestorTable.resize(n + 1, vector<ll>(cols, -1));
+    adj.resize(n + 1);
+
+    for (ll i = 2; i <= n; i++)
     {
-        int boss;
-        cin>>boss;
-        tree[i].push_back(boss);
+        ll parent;
+        cin >> parent;
+
+        adj[parent].push_back(i);
+        adj[i].push_back(parent);
     }
-    vector<vector<int>> query(m);
-    for(int i=0;i<m;i++)
+    
+
+    dfs(1, -1, adj);
+    for(int j = 1; j < cols; j++)
     {
-        int boss,level;
-        cin>>boss>>level;
-        query[i]={boss,level};
+        for (ll i = 1; i <= n; i++)
+        {
+            if (ancestorTable[i][j - 1] != -1)
+            {
+                ancestorTable[i][j] = ancestorTable[ancestorTable[i][j - 1]][j - 1];
+            }
+        }
     }
 
-    vector<int> res(m);
-    for(int i=0;i<m;i++)
+    for (ll i = 1; i <= q; i++)
     {
-        int boss=query[i][0];
-        int level=query[i][1];
-        vector<int> dist(n+1,0);
-        dfs(boss,-1,tree,dist);
-        auto idx=find(dist.begin(),dist.end(),level);
-        res[i]=(idx==dist.end())?-1:idx-dist.begin();
+        ll node, k;
+        cin >> node >> k;
 
+        bool flag = true;
+
+        for (ll j = 0; j < cols; j++)
+        {
+            if (k & (1LL << j))
+            {
+                node = ancestorTable[node][j];
+
+                if (node == -1)
+                {
+                    cout << -1 << '\n';
+                    flag = false;
+                    break;
+                }
+            }
+        }
+
+        if (!flag)
+            continue;
+
+        cout << node << '\n';
     }
-
-    for(int i=0;i<m;i++)
-    {
-        cout<<res[i]<<" ";
-    }
-
-
 
     return 0;
-
 }
